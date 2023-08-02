@@ -1,18 +1,17 @@
 
-function displayLocalStorageData() {
+function displayAppointmentData(data) {
     const itemList = document.getElementById('items');
     itemList.innerHTML = ''; // Clear the existing list items
     itemList.addEventListener('click', handleItemClick);
 
     // Loop through localStorage and display the data
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const data = JSON.parse(localStorage.getItem(key));
+    data.forEach((item)=> {
+        const {name,Email,Phone,Time,key} =item;
         var deleteBtn = document.createElement('button');
         var editBtn = document.createElement('button');
         const li = document.createElement('li');
         li.className = 'list-group-item';
-        const combinedText = `${data.name} ${data.Email}-${data.Phone} (${data.date} at ${data.Time})`;
+        const combinedText = `${name} ${Email}-${Phone} (${item.date} at ${item.Time})`;
         li.appendChild(document.createTextNode(combinedText));
         deleteBtn.className = 'btn btn-danger btn-sm float-right delete';
         deleteBtn.dataset.key = key;
@@ -23,35 +22,49 @@ function displayLocalStorageData() {
         li.appendChild(deleteBtn);
         li.appendChild(editBtn);
         itemList.appendChild(li);
-    }
+    });
 }
 
 function handleItemClick(e) {
     if (e.target.classList.contains('delete')) {
         if (confirm('Are you sure you want to delete this item?')) {
             const key = e.target.dataset.key;
-            localStorage.removeItem(key);
-            const li = e.target.parentElement;
-            li.remove();
+            axios.delete(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}`)
+            .then((response)=>{
+                console.log(response);
+                fetchDataAndDisplay();
+            })
+            .catch((err)=>console.log(err));
         }
     } else if (e.target.classList.contains('edit')) {
         const key = e.target.dataset.key;
+        axios.get(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}` )
+            .then((response)=>{
+                console.log(response);
+                fetchDataAndDisplay();
+            
+           
        
-        const data = JSON.parse(localStorage.getItem(key));
-        localStorage.removeItem(key);
-        const li = e.target.parentElement;
-        li.remove();
-        document.getElementById("name").value = data.name;
-        document.getElementById("email").value = data.Email;
-        document.getElementById("phone").value = data.Phone;
-        document.getElementById("date").value = data.date;
-        document.getElementById("time_for_call").value = data.Time;
+        document.getElementById("name").value = response.data.name;
+        document.getElementById("email").value =response.data.Email;
+        document.getElementById("phone").value = response.data.Phone;
+        document.getElementById("date").value = response.data.date;
+        document.getElementById("time_for_call").value = response.data.Time;
         document.getElementById("submitBtn").textContent = "Save";
         
-        document.getElementById("submitBtn").dataset.key = key;
+        //document.getElementById("submitBtn").dataset.key = key;
+    })
+    .catch((err)=>console.log(err));
     }
 }
-
+function fetchDataAndDisplay() {
+    axios.get("https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData")
+        .then((response) => {
+            const data = response.data;
+            displayAppointmentData(data);
+        })
+        .catch((err) => console.log(err));
+}
 document.getElementById("submitBtn").addEventListener("click", function() {
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
@@ -70,12 +83,23 @@ document.getElementById("submitBtn").addEventListener("click", function() {
             Time: timeForCall
         };
         let myObj_serialized = JSON.stringify(myObj);
-        localStorage.setItem(key, myObj_serialized);
+        axios.put(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}`, myObj_serialized, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((response) => {
+            console.log(response);
+            // Refresh the data after successful update
+            fetchDataAndDisplay();
+        })
+        .catch((err) => console.log(err));
+       
         document.getElementById("submitBtn").textContent = "Add Data";
-        document.getElementById("submitBtn").removeAttribute("data-key");
+       // document.getElementById("submitBtn").removeAttribute("data-key");
     } else {
         // If key doesn't exist, it means we are adding a new item
-        const uniqueKey = Date.now().toString();
+        
         let myObj = {
             name: name,
             Email: email,
@@ -84,10 +108,20 @@ document.getElementById("submitBtn").addEventListener("click", function() {
             Time: timeForCall
         };
         let myObj_serialized = JSON.stringify(myObj);
-        localStorage.setItem(uniqueKey, myObj_serialized);
+        axios.post("https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData", myObj_serialized,{
+            headers: {
+                'Content-Type': 'application/json'
+              }
+        })
+        .then((response) => {
+            
+          console.log(response);
+        })
+        .catch((err) => console.log(err));
+        
     }
 
-    displayLocalStorageData();
+   
     clearInputFields();
 });
 
@@ -99,5 +133,5 @@ function clearInputFields() {
     document.getElementById("time_for_call").value = '';
 }
 
-displayLocalStorageData();
+fetchDataAndDisplay();
 
