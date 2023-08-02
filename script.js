@@ -6,7 +6,7 @@ function displayAppointmentData(data) {
 
     // Loop through localStorage and display the data
     data.forEach((item)=> {
-        const {name,Email,Phone,Time,key} =item;
+        const {name,Email,Phone,Time,date,_id} =item;
         var deleteBtn = document.createElement('button');
         var editBtn = document.createElement('button');
         const li = document.createElement('li');
@@ -14,10 +14,10 @@ function displayAppointmentData(data) {
         const combinedText = `${name} ${Email}-${Phone} (${item.date} at ${item.Time})`;
         li.appendChild(document.createTextNode(combinedText));
         deleteBtn.className = 'btn btn-danger btn-sm float-right delete';
-        deleteBtn.dataset.key = key;
+        deleteBtn.dataset.key = _id;
         deleteBtn.appendChild(document.createTextNode('Delete'));
         editBtn.className = 'btn btn-warning btn-sm float-right edit';
-        editBtn.dataset.key = key;
+        editBtn.dataset.key = _id;
         editBtn.appendChild(document.createTextNode('Edit'));
         li.appendChild(deleteBtn);
         li.appendChild(editBtn);
@@ -28,7 +28,9 @@ function displayAppointmentData(data) {
 function handleItemClick(e) {
     if (e.target.classList.contains('delete')) {
         if (confirm('Are you sure you want to delete this item?')) {
+
             const key = e.target.dataset.key;
+            
             axios.delete(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}`)
             .then((response)=>{
                 console.log(response);
@@ -38,27 +40,28 @@ function handleItemClick(e) {
         }
     } else if (e.target.classList.contains('edit')) {
         const key = e.target.dataset.key;
-        axios.get(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}` )
+        
+        axios.get(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData/${key}`)
             .then((response)=>{
-                console.log(response);
-                fetchDataAndDisplay();
+                const data =response.data;
             
            
        
-        document.getElementById("name").value = response.data.name;
-        document.getElementById("email").value =response.data.Email;
-        document.getElementById("phone").value = response.data.Phone;
-        document.getElementById("date").value = response.data.date;
-        document.getElementById("time_for_call").value = response.data.Time;
+        document.getElementById("name").value = data.name;
+        document.getElementById("email").value =data.Email;
+        document.getElementById("phone").value =data.Phone;
+        document.getElementById("date").value = data.date;
+        document.getElementById("time_for_call").value = data.Time;
         document.getElementById("submitBtn").textContent = "Save";
         
-        //document.getElementById("submitBtn").dataset.key = key;
+        // Set a custom attribute 'data-key' to store the key value
+        document.getElementById("submitBtn").setAttribute('data-key', key);
     })
     .catch((err)=>console.log(err));
     }
 }
 function fetchDataAndDisplay() {
-    axios.get("https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData")
+    axios.get(`https://crudcrud.com/api/c2e5500d85af4be18be03f0f32ac9ed6/appointmentData`)
         .then((response) => {
             const data = response.data;
             displayAppointmentData(data);
@@ -71,7 +74,7 @@ document.getElementById("submitBtn").addEventListener("click", function() {
     const phone = document.getElementById("phone").value;
     const date = document.getElementById("date").value;
     const timeForCall = document.getElementById("time_for_call").value;
-    const key = document.getElementById("submitBtn").dataset.key;
+    const key = document.getElementById("submitBtn").getAttribute('data-key');
 
     if (key) {
         // If key exists, it means we are editing an existing item
@@ -114,7 +117,7 @@ document.getElementById("submitBtn").addEventListener("click", function() {
               }
         })
         .then((response) => {
-            
+            fetchDataAndDisplay(); 
           console.log(response);
         })
         .catch((err) => console.log(err));
