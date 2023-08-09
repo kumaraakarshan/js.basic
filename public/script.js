@@ -22,25 +22,18 @@ document.getElementById("submitBtn").addEventListener("click", function() {
         .catch(error => {
             console.error('Error saving data: ', error);
         });
-
-        alert('appointment booked successfully successfully')
 });
 
 // User Deletion Functionality
 function deleteUser(userId) {
     axios.delete(`/api/delete-user/${userId}`)
-    
         .then(response => {
-            
             alert(response.data.message);
             fetchAndDisplayUsers(); // Refresh the user list after deletion
         })
         .catch(error => {
             console.error('Error deleting user: ', error);
         });
-       
-       alert('deleted successfully') 
-       
 }
 
 // Fetch and Display Users
@@ -55,7 +48,7 @@ function fetchAndDisplayUsers() {
                 return;
             }
             
-            userList.innerHTML = ''; 
+            userList.innerHTML = ''; // Clear existing content
             
             users.forEach(user => {
                 const listItem = document.createElement('li');
@@ -64,7 +57,6 @@ function fetchAndDisplayUsers() {
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => deleteUser(user.id));
-                
 
                 listItem.appendChild(deleteButton);
                 userList.appendChild(listItem);
